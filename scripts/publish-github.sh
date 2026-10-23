@@ -45,14 +45,22 @@ fi
 
 # --------------------------------------------------------------- push
 cd "$REPO_DIR"
-git config credential.helper 'store --timeout=28800'
+# El helper debe ser `store` (lee/escribe ~/.git-credentials).
+# `cache` NO lee ese archivo y `store --timeout=...` es una opcion
+# invalida (el --timeout pertenece a `cache`). Por eso el push fallaba
+# con "could not read Password".
+git config --unset-all credential.helper 2>/dev/null || true
+git config credential.helper store
 git remote remove origin 2>/dev/null || true
 git remote add origin "https://${LOGIN}@github.com/${LOGIN}/${REPO_NAME}.git"
-git push -u origin main
 
-# Guardar el token en el credential store para futures pushes
+# Credenciales en el credential store ANTES del push (asi no hay prompt).
 printf 'https://%s:%s@github.com\n' "$LOGIN" "$GITHUB_TOKEN" > "$HOME/.git-credentials"
 chmod 600 "$HOME/.git-credentials"
+
+git push -u origin main
+
+echo "Push OK."
 
 # --------------------------------------------------------------- Pages
 echo
