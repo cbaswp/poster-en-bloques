@@ -1,0 +1,58 @@
+# Póster en Bloques — Versión portable (un solo HTML)
+
+Este archivo **NO necesita servidor, ni internet, ni instalar nada**.
+Doble clic → funciona.
+
+## Qué es
+
+`index.html` es el generador de pósters murales completo, empaquetado en
+**un único archivo de 653 KB**. Toda la lógica está dentro: el motor de
+cálculo, el renderizador y la librería que arma el PDF.
+
+La imagen que subes **nunca sale de tu computadora**: todo el trabajo lo
+hace el navegador en tu propio equipo.
+
+## Cómo usarlo
+
+1. Copia el archivo a tu escritorio (o a una carpeta compartida).
+2. Ábrelo con doble clic. Se abre en tu navegador.
+3. Arrastra tu imagen, ajusta el tamaño, y haz clic en **Generar PDF**.
+4. Imprime las hojas A4 y únelas.
+
+## Requisitos
+
+- Un navegador moderno: **Chrome, Edge o Firefox** (en Windows 10/11 ya
+  viene Edge instalado).
+- Nada más. No necesita Node, ni Python, ni internet, ni derechos de
+  administrador.
+
+## Si tu equipo tiene que compartir el mismo póster
+
+Cada persona puede abrir el archivo por su cuenta y generar su propio PDF.
+Si quieren **el mismo póster idéntico**, lo más simple es que uno lo genere
+y lo pase por el chat o el correo — el PDF ya trae las 6 hojas listas para
+imprimir.
+
+## Detalle técnico (por si alguien pregunta)
+
+El HTML original usa módulos ES y un Web Worker de tipo `module`. Bajo
+`file://` el navegador los rechaza (CORS con origen `null`), así que al
+empaquetar:
+
+- Los tres módulos JS se fusionaron en un solo script con `esbuild`.
+- `pdf-lib` quedó incrustado dentro del `<body>`.
+- El worker se sirve desde un `blob:` URL como worker **clásico** (sin
+  `type: 'module'`), que sí funciona bajo `file://`.
+
+El worker clásico usa `OffscreenCanvas` y `createImageBitmap`, que existen
+igual en Chrome, Edge y Firefox actuales.
+
+## Regenerar este archivo
+
+Desde la carpeta del proyecto, en la PC que tiene el código:
+
+```bash
+node tools/build-standalone.mjs
+```
+
+Deja el resultado en `dist/index.html`.
