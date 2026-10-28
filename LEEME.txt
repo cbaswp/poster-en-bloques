@@ -6,7 +6,7 @@ Doble clic → funciona.
 ## Qué es
 
 `index.html` es el generador de pósters murales completo, empaquetado en
-**un único archivo de 653 KB**. Toda la lógica está dentro: el motor de
+**un único archivo de 655 KB**. Toda la lógica está dentro: el motor de
 cálculo, el renderizador y la librería que arma el PDF.
 
 La imagen que subes **nunca sale de tu computadora**: todo el trabajo lo
@@ -16,8 +16,26 @@ hace el navegador en tu propio equipo.
 
 1. Copia el archivo a tu escritorio (o a una carpeta compartida).
 2. Ábrelo con doble clic. Se abre en tu navegador.
-3. Arrastra tu imagen, ajusta el tamaño, y haz clic en **Generar PDF**.
-4. Imprime las hojas A4 y únelas.
+3. Arrastra tu imagen y ajusta el tamaño.
+4. Imprime: usa **🖨️ Imprimir todas las hojas individualmente** para que
+   cada hoja salga en su propia página, o **⬇ Descargar PDF** para llevarte
+   el archivo y unir las hojas después según la guía de montaje.
+
+## Los botones de impresión
+
+- **⬇ Descargar PDF** — el póster completo, con la página de guía de montaje.
+- **🖨️ Imprimir solo 1 hoja de prueba** — una hoja con la imagen a tamaño
+  completo, para revisar la escala antes de imprimir todo.
+- **🖨️ Imprimir todas las hojas individualmente** — abre el diálogo de
+  impresión del sistema con cada hoja en su propia página. **No descarga
+  nada.** Si tu navegador bloquea la ventana, permite las ventanas emergentes
+  para el archivo.
+- **📐 Hoja de calibración** — una hoja con escalas para comprobar que tu
+  impresora imprime a escala real (algunos navegadores ajustan al papel y
+  las piezas no encajan).
+- **🧭 Guía de montaje** — instrucciones de cómo pegar las hojas.
+
+Imprime siempre a **escala 100%**. Nunca uses «Ajustar a la página».
 
 ## Requisitos
 
@@ -52,7 +70,9 @@ igual en Chrome, Edge y Firefox actuales.
 Desde la carpeta del proyecto, en la PC que tiene el código:
 
 ```bash
+cd src
 node tools/build-standalone.mjs
+cp dist/index.html ../index.html
 ```
 
-Deja el resultado en `dist/index.html`.
+Deja el resultado en `src/dist/index.html`.

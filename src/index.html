@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Póster en Bloques — Imprime en grande desde tu impresora</title>
+<meta name="description" content="Convierte una imagen en un póster mural imprimiendo en varias hojas A4. Todo en tu navegador, tu imagen nunca se sube.">
+<style>
+:root{
+  --bg:#0f1216; --panel:#161b22; --panel2:#1c232c; --line:#2a333e;
+  --txt:#e6edf3; --mut:#8b98a5; --dim:#5d6b78;
+  --acc:#4ec3f7; --ok:#4ec9b0; --warn:#f0b429; --bad:#ef5350;
+  --r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:16px}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+h1{font-size:20px;font-weight:700;margin-bottom:2px}
+.sub{color:var(--mut);font-size:13px;margin-bottom:16px}
+
+.grid{display:grid;grid-template-columns:300px 1fr 320px;gap:16px;align-items:start}
+@media(max-width:1250px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.card h2{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--mut);
+  padding:11px 14px;border-bottom:1px solid var(--line);background:var(--panel2);font-weight:700}
+.pad{padding:14px}
+.stack{display:flex;flex-direction:column;gap:14px}
+
+label.f{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);margin:0 0 6px}
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+select,input[type=number],input[type=text]{width:100%;background:#0b0f14;color:var(--txt);
+  border:1px solid var(--line);border-radius:7px;padding:8px 10px;font:inherit;font-size:13px}
+select:focus,input:focus{outline:none;border-color:var(--acc)}
+.seg{display:flex;background:#0b0f14;border:1px solid var(--line);border-radius:7px;padding:3px;gap:3px}
+.seg button{flex:1;background:transparent;border:0;color:var(--mut);padding:6px 4px;border-radius:5px;
+  font:inherit;font-size:12px;cursor:pointer}
+.seg button.on{background:var(--acc);color:#06121b;font-weight:700}
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:9px}
+.chk input{width:15px;height:15px;accent-color:var(--acc)}
+.hint{font-size:11px;color:var(--dim);margin-top:5px;line-height:1.45}
+.range{width:100%;accent-color:var(--acc)}
+
+.drop{border:1.5px dashed var(--line);border-radius:8px;padding:22px 12px;text-align:center;
+  background:#0b0f14;cursor:pointer;transition:.15s}
+.drop:hover,.drop.over{border-color:var(--acc);background:rgba(78,195,247,.06)}
+.drop .big{font-size:26px;margin-bottom:6px}
+.drop .t{font-size:13px;font-weight:600}
+.drop .s{font-size:11px;color:var(--dim);margin-top:3px}
+
+.stage{background:#0b0f14;border:1px solid var(--line);border-radius:var(--r);padding:16px;
+  min-height:420px;display:flex;align-items:center;justify-content:center;position:relative}
+.poster{position:relative;background:#1a1f26;
+  box-shadow:0 8px 34px rgba(0,0,0,.55);border-radius:2px;overflow:hidden}
+.posterImg{position:absolute;display:block;user-select:none;-webkit-user-drag:none}
+.sheetFrame{position:absolute;border:1px solid rgba(78,195,247,.55);pointer-events:none}
+.sheetFrame span{position:absolute;left:2px;bottom:2px;background:rgba(0,0,0,.75);color:#fff;
+  font-size:9px;padding:1px 4px;border-radius:3px}
+.sheetFrame.empty{border-color:rgba(240,180,41,.6);background:rgba(240,180,41,.12)}
+.ovBand{position:absolute;background:rgba(78,195,247,.16);pointer-events:none;
+  border-left:1px dashed rgba(78,195,247,.9);border-right:1px dashed rgba(78,195,247,.9)}
+.cap{text-align:center;margin-top:12px;font-size:12px;color:var(--mut)}
+.cap b{color:var(--txt)}
+
+.sheets{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.sheet{background:#fff;border-radius:3px;position:relative;overflow:hidden;
+  box-shadow:0 1px 5px rgba(0,0,0,.5)}
+.sheetArea{position:absolute;overflow:hidden}
+.sheetImg{position:absolute;display:block;max-width:none;user-select:none;-webkit-user-drag:none}
+.sheet.blank{background:#e8e8ec}
+.sheet.blank::after{content:'BLANCO';position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;color:#9aa;font-size:9px;font-weight:700}
+.sheet .slbl{position:absolute;left:2px;bottom:2px;background:rgba(0,0,0,.78);color:#fff;
+  font-size:8px;padding:0 3px;border-radius:2px;z-index:2}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 11px}
+.stat .k{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--dim)}
+.stat .v{font-size:18px;font-weight:700;margin-top:2px}
+.stat .v small{font-size:11px;color:var(--mut);font-weight:400}
+.stat.good .v{color:var(--ok)} .stat.warn .v{color:var(--warn)} .stat.bad .v{color:var(--bad)}
+
+.btn{display:block;width:100%;padding:12px;border:0;border-radius:8px;font:inherit;font-weight:700;
+  font-size:14px;cursor:pointer;text-align:center}
+.btn-p{background:var(--acc);color:#06121b}
+.btn-p:disabled{background:#2a333e;color:var(--dim);cursor:not-allowed}
+.btn-s{background:var(--panel2);color:var(--txt);border:1px solid var(--line);margin-top:8px;
+  font-weight:600;font-size:13px}
+.btn-s:hover{border-color:var(--acc)}
+.btn-s:disabled{opacity:.45;cursor:not-allowed}
+
+.note{background:rgba(78,195,247,.07);border-left:3px solid var(--acc);padding:9px 11px;
+  border-radius:0 6px 6px 0;font-size:12px;color:var(--mut);line-height:1.5}
+.note b{color:var(--txt)}
+.note.warn{background:rgba(240,180,41,.08);border-left-color:var(--warn)}
+.note.bad{background:rgba(239,83,80,.08);border-left-color:var(--bad)}
+.note.ok{background:rgba(78,201,176,.08);border-left-color:var(--ok)}
+.hidden{display:none}
+
+.progress{position:absolute;inset:0;background:rgba(11,15,20,.93);display:flex;
+  flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:5;border-radius:var(--r)}
+.bar{width:280px;height:8px;background:#1c232c;border-radius:20px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--acc);width:0;transition:width .18s}
+.progress .msg{font-size:13px;color:var(--mut)}
+
+.busy{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;
+  justify-content:center;z-index:100}
+.busy .box{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:24px 28px;
+  text-align:center;min-width:260px}
+.spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--acc);
+  border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.busy.hidden{display:none!important}
+.progress.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<h1>🖨️ Póster en Bloques</h1>
+<p class="sub">Convierte una imagen en un póster mural usando hojas A4 normales. Todo se procesa en tu navegador — <b>tu imagen nunca se sube a ningún servidor</b>.</p>
+
+<div class="grid">
+
+  <!-- ══════════ COLUMNA 1 ══════════ -->
+  <div class="stack">
+    <div class="card">
+      <h2>1 · Imagen</h2>
+      <div class="pad">
+        <div class="drop" id="drop">
+          <div class="big">🖼️</div>
+          <div class="t">Arrastra tu imagen aquí</div>
+          <div class="s">JPG · PNG · WebP — sin límite de tamaño</div>
+        </div>
+        <input type="file" id="file" accept="image/png,image/jpeg,image/webp" class="hidden">
+        <div id="fileInfo" class="hidden" style="margin-top:12px;font-size:12px;color:var(--mut);
+          display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span class="mono" id="fileName">—</span>
+          <button class="btn btn-s" id="btnChange" style="margin:0;padding:5px 10px;font-size:11px">Cambiar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2 · Configuración</h2>
+      <div class="pad">
+        <div class="field">
+          <label class="f">Tamaño del póster</label>
+          <div class="seg" id="segSizing">
+            <button data-v="pages" class="on">Por páginas</button>
+            <button data-v="exact">Por tamaño</button>
+          </div>
+          <div class="hint" id="hintSizing">Elige cuántas hojas de ancho. El alto sale de la proporción de tu imagen.</div>
+        </div>
+
+        <div id="exactBox" class="hidden">
+          <div class="field">
+            <label class="f">Tamaño exacto</label>
+            <div class="row">
+              <input type="number" id="targetW" value="60" min="1" step="1">
+              <input type="number" id="targetH" value="90" min="1" step="1">
+            </div>
+            <div class="seg" style="margin-top:7px" id="segUnit">
+              <button data-v="cm" class="on">cm</button>
+              <button data-v="in">pulgadas</button>
+            </div>
+            <div class="hint">Le digo a la app cuántas hojas hacen falta para ese tamaño exacto.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="f">Papel</label>
+          <select id="paper"></select>
+          <div id="customPaper" class="hidden" style="margin-top:8px">
+            <div class="row">
+              <input type="number" id="cw" placeholder="ancho mm" min="50" max="1000">
+              <input type="number" id="ch" placeholder="alto mm" min="50" max="1000">
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="f">Orientación</label>
+          <div class="seg" id="segOrient">
+            <button data-v="portrait" class="on">Vertical</button>
+            <button data-v="landscape">Horizontal</button>
+          </div>
+        </div>
+
+        <div class="field" id="gridBox">
+          <label class="f">Hojas de ancho × alto</label>
+          <div class="row">
+            <input type="number" id="cols" value="3" min="1" max="20">
+            <input type="number" id="rows" value="4" min="0" max="20" disabled>
+          </div>
+          <div class="hint"><label style="display:inline;margin:0"><input type="checkbox" id="autoRows" checked style="width:auto;vertical-align:-2px"> Calcular el alto automáticamente</label></div>
+        </div>
+
+        <div class="field">
+          <label class="f">Márgenes no imprimibles</label>
+          <div class="row" style="margin-bottom:6px">
+            <div><input type="number" id="mTop" value="10" min="0" max="40" title="arriba"><div class="hint" style="text-align:center">arriba</div></div>
+            <div><input type="number" id="mRight" value="10" min="0" max="40" title="derecha"><div class="hint" style="text-align:center">derecha</div></div>
+          </div>
+          <div class="row">
+            <div><input type="number" id="mBottom" value="10" min="0" max="40" title="abajo"><div class="hint" style="text-align:center">abajo</div></div>
+            <div><input type="number" id="mLeft" value="10" min="0" max="40" title="izquierda"><div class="hint" style="text-align:center">izquierda</div></div>
+          </div>
+          <div class="hint">Lo que tu impresora NO imprime en el borde. La zona muerta casi nunca es igual en los cuatro lados.</div>
+        </div>
+
+        <div class="field">
+          <label class="f">Solapamiento — <span class="mono" id="ovVal">10</span> mm</label>
+          <input type="range" class="range" id="overlap" min="0" max="20" value="10">
+          <div class="hint">La banda que se repite entre hojas vecinas. 5–15 mm es lo recomendado.</div>
+        </div>
+
+        <div class="field">
+          <label class="f">Solapa de pegado (blanca) — <span class="mono" id="flapVal">0</span> mm</label>
+          <input type="range" class="range" id="flap" min="0" max="15" value="0">
+          <div class="hint">Franja en blanco donde se pega. Deja que la imagen no quede pegada al borde.</div>
+        </div>
+
+        <div class="field">
+          <label class="f">Resolución</label>
+          <div class="seg" id="segDpi">
+            <button data-v="150">150 DPI</button>
+            <button data-v="300" class="on">300 DPI</button>
+            <button data-v="600">600 DPI</button>
+          </div>
+          <div class="hint">600 DPI duplica el peso del PDF. 300 va bien para fotos.</div>
+        </div>
+
+        <div class="field">
+          <label class="f">Ajuste</label>
+          <div class="seg" id="segFit">
+            <button data-v="contain" class="on">Ajustar</button>
+            <button data-v="cover">Llenar</button>
+          </div>
+          <div class="hint">«Ajustar» no recorta nada. «Llenar» llena la hoja pero corta los bordes.</div>
+        </div>
+
+        <div class="field">
+          <label class="f">Estilo</label>
+          <label class="chk"><input type="checkbox" id="guides" checked> Marcas de corte y etiquetas</label>
+          <label class="chk"><input type="checkbox" id="halftone"> Puntos (medio tono)</label>
+          <div id="halftoneBox" class="hidden">
+            <div class="row" style="margin-bottom:8px">
+              <div><label class="f">Paso (mm)</label><input type="number" id="htPitch" value="3" min="1" max="10" step="0.5"></div>
+              <div><label class="f">Forma</label><select id="htShape"><option value="circle">Círculo</option><option value="square">Cuadrado</option></select></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ COLUMNA 2 ══════════ -->
+  <div class="stack">
+    <div class="card">
+      <h2>Vista previa del póster</h2>
+      <div class="pad">
+        <div class="stage" id="stage">
+          <div id="emptyState" style="text-align:center;color:var(--dim)">
+            <div style="font-size:38px;margin-bottom:8px">🖼️</div>
+            <div style="font-size:14px">Carga una imagen para ver la vista previa</div>
+          </div>
+          <div id="posterWrap" class="hidden">
+            <div class="poster" id="poster"></div>
+            <div class="cap" id="posterCap"></div>
+          </div>
+          <div class="progress hidden" id="progress">
+            <div class="spin"></div>
+            <div class="msg" id="progMsg">Generando…</div>
+            <div class="bar"><i id="progBar"></i></div>
+            <button class="btn btn-s" id="btnCancel" style="margin-top:4px">Cancelar</button>
+          </div>
+        </div>
+        <div class="hint" style="text-align:center;margin-top:6px">
+          Las líneas azules marcan dónde se separa cada hoja. La franja clara a la derecha es el solapamiento.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Hojas individuales</h2>
+      <div class="pad">
+        <div class="sheets" id="sheets"></div>
+        <div class="hint" style="margin-top:10px">
+          Cada hoja lleva su etiqueta <b>fila·columna</b> y marcas de corte en las esquinas.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ COLUMNA 3 ══════════ -->
+  <div class="stack">
+    <div class="card">
+      <h2>3 · Resultado</h2>
+      <div class="pad">
+        <div class="stats">
+          <div class="stat"><div class="k">Hojas</div><div class="v" id="sSheets">—</div></div>
+          <div class="stat"><div class="k">Tamaño final</div><div class="v" id="sSize">—</div></div>
+          <div class="stat" id="stDpi"><div class="k">Resolución real</div><div class="v" id="sDpi">—</div></div>
+          <div class="stat" id="stSharp"><div class="k">Nitidez</div><div class="v" id="sSharp">—</div></div>
+          <div class="stat"><div class="k">Papel</div><div class="v" id="sPaper">—</div></div>
+          <div class="stat"><div class="k">Tinta (est.)</div><div class="v" id="sInk">—</div></div>
+        </div>
+
+        <div id="alerts" style="margin-top:12px;display:flex;flex-direction:column;gap:8px"></div>
+
+        <div class="note warn" style="margin-top:12px">
+          <b>Imprime a escala 100%.</b> Nunca uses «Ajustar a la página» — redimensiona cada hoja por separado y las piezas no encajan.
+        </div>
+
+        <button class="btn btn-p" id="btnPdf" style="margin-top:12px" disabled>⬇ Descargar PDF</button>
+        <button class="btn btn-s" id="btnTest" disabled>🖨️ Imprimir solo 1 hoja de prueba</button>
+        <button class="btn btn-s" id="btnPrintAll" disabled>🖨️ Imprimir todas las hojas individualmente</button>
+        <button class="btn btn-s" id="btnCalib" disabled>📐 Hoja de calibración</button>
+        <button class="btn btn-s" id="btnGuide">🧭 Guía de montaje</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="busy hidden" id="busy">
+  <div class="box">
+    <div class="spin"></div>
+    <div id="busyMsg" style="font-size:13px;color:var(--mut)">Trabajando…</div>
+  </div>
+</div>
+
+<script src="vendor/pdf-lib.min.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
